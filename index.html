@@ -3,305 +3,370 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>AI DM Automator | Multi-Platform Demo</title>
+  <title>DM Automator Pro | Secure AI Dashboard</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body {
-      font-family: 'Segoe UI', system-ui, sans-serif;
-      background: linear-gradient(135deg, #f0f4ff 0%, #e4ebf5 100%);
-      min-height: 100vh;
-      color: #1a1a1a;
+    body, html { height: 100%; font-family: 'Segoe UI', system-ui, sans-serif; overflow: hidden; }
+    /* Animated background */
+    .bg-animated {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%);
+      z-index: -2;
     }
-    .container { max-width: 1200px; margin: auto; padding: 20px; }
-
-    /* Header gradient */
-    .header {
-      background: linear-gradient(135deg, #4f46e5, #7c3aed, #db2777);
-      color: white; padding: 20px 25px; border-radius: 20px;
-      margin-bottom: 25px; display: flex; justify-content: space-between;
-      align-items: center; flex-wrap: wrap; gap: 15px;
-      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    .orb {
+      position: fixed; border-radius: 50%; filter: blur(80px); opacity: 0.3;
+      z-index: -1; pointer-events: none;
     }
-    .header h1 { font-weight: 700; font-size: 1.8rem; }
-    .header .status { background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 30px; }
+    .orb1 { width: 400px; height: 400px; background: #7c3aed; top: -100px; left: -100px; animation: float1 12s infinite; }
+    .orb2 { width: 500px; height: 500px; background: #db2777; bottom: -150px; right: -150px; animation: float2 15s infinite; }
+    .orb3 { width: 300px; height: 300px; background: #2563eb; top: 50%; left: 50%; transform: translate(-50%, -50%); animation: pulse 8s infinite; }
+    @keyframes float1 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(50px,50px) scale(1.1); } }
+    @keyframes float2 { 0%,100% { transform: translate(0,0) scale(1); } 50% { transform: translate(-40px,-40px) scale(1.15); } }
+    @keyframes pulse { 0%,100% { transform: translate(-50%, -50%) scale(1); opacity:0.3; } 50% { transform: translate(-50%, -50%) scale(1.2); opacity:0.2; } }
 
-    /* Glass cards */
+    /* Glass panels */
     .glass {
-      background: rgba(255,255,255,0.7);
+      background: rgba(255,255,255,0.06);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    .glass-card {
+      background: rgba(255,255,255,0.08);
       backdrop-filter: blur(12px);
-      border: 1px solid rgba(255,255,255,0.3);
-      border-radius: 20px;
-      box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+      border: 1px solid rgba(255,255,255,0.08);
     }
 
-    /* Tabs */
-    .tabs {
-      display: flex; gap: 5px; background: rgba(255,255,255,0.6);
-      backdrop-filter: blur(8px); border-radius: 14px; padding: 5px;
-      margin-bottom: 20px; width: fit-content;
-    }
-    .tab {
-      padding: 10px 22px; border-radius: 12px; cursor: pointer;
-      font-weight: 600; transition: all 0.2s; border: none; background: transparent;
-    }
-    .tab.active {
-      background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-      color: #4338ca; border-bottom: 2px solid #4338ca;
-    }
-    .tab:hover:not(.active) { background: rgba(255,255,255,0.7); }
+    /* Screen management */
+    .screen { position: absolute; top: 0; left: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; transition: opacity 0.5s, visibility 0.5s; }
+    .hidden { opacity: 0; visibility: hidden; pointer-events: none; }
 
-    /* Stats */
-    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 25px; }
-    .stat-card {
-      display: flex; align-items: center; gap: 12px; padding: 18px;
+    /* Login/OTP card */
+    .login-card {
+      background: rgba(255,255,255,0.08);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255,255,255,0.15);
+      border-radius: 24px; padding: 2.5rem; width: 90%; max-width: 420px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.5); text-align: center; color: white;
     }
-    .icon-box {
-      width: 44px; height: 44px; border-radius: 14px; display: flex;
-      align-items: center; justify-content: center; font-size: 1.4rem; color: white;
+    .login-card h1 { font-size: 2rem; margin-bottom: 0.5rem; }
+    .input-field {
+      width: 100%; padding: 0.85rem 1.2rem; margin: 0.5rem 0;
+      background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 14px; color: white; font-size: 1rem; outline: none;
+      transition: border 0.3s;
     }
-    .stat-number { font-size: 1.8rem; font-weight: 700; }
-    .stat-label { font-size: 0.8rem; color: #555; }
-
-    /* Inbox */
-    .inbox { max-height: 600px; overflow-y: auto; }
-    .message {
-      border-bottom: 1px solid #e5e7eb; padding: 16px 0;
-      display: flex; flex-direction: column; gap: 8px;
-    }
-    .msg-header { display: flex; justify-content: space-between; }
-    .sender { font-weight: 600; }
-    .badge {
-      font-size: 0.7rem; padding: 2px 8px; border-radius: 20px;
-      font-weight: 600; margin-left: 8px;
-    }
-    .badge-hot { background: #fee2e2; color: #b91c1c; }
-    .badge-query { background: #dbeafe; color: #1e40af; }
-
-    .ai-reply {
-      background: linear-gradient(to right, #eef2ff, #f3e8ff);
-      border: 1px solid #c7d2fe; border-radius: 14px; padding: 12px;
-      margin-top: 5px; font-size: 0.85rem;
-    }
+    .input-field:focus { border-color: #a78bfa; }
     .btn {
-      border: none; border-radius: 10px; padding: 8px 16px;
-      font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.8rem;
-      margin-right: 6px;
+      border: none; padding: 0.85rem 1.5rem; border-radius: 14px;
+      font-weight: 600; cursor: pointer; transition: all 0.3s; font-size: 1rem;
+      background: linear-gradient(135deg, #8b5cf6, #ec4899);
+      color: white; width: 100%; margin-top: 0.5rem;
     }
-    .btn-primary { background: #4338ca; color: white; }
-    .btn-primary:hover { background: #3730a3; }
-    .btn-outline { background: white; border: 1px solid #d1d5db; }
-    .btn-outline:hover { background: #f9fafb; }
+    .btn:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(139,92,246,0.4); }
+    .btn-outline { background: transparent; border: 1px solid rgba(255,255,255,0.3); color: white; }
+    .btn-outline:hover { background: rgba(255,255,255,0.1); }
 
-    .sidebar { display: flex; flex-direction: column; gap: 16px; }
-
-    @media (max-width: 768px) {
-      .header { flex-direction: column; text-align: center; }
-      .main-layout { grid-template-columns: 1fr; }
+    /* Dashboard layout */
+    .dashboard-container {
+      height: 100vh; width: 100%; display: flex; flex-direction: column; color: white;
     }
-    .main-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+    .header {
+      background: rgba(0,0,0,0.3); backdrop-filter: blur(12px);
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      padding: 1rem 2rem; display: flex; justify-content: space-between; align-items: center;
+    }
+    .main-content { flex: 1; padding: 1.5rem; overflow-y: auto; display: grid; grid-template-columns: 2fr 1fr; gap: 1.5rem; max-width: 1400px; margin: auto; width: 100%; }
+    @media (max-width: 768px) { .main-content { grid-template-columns: 1fr; } }
+    .inbox-panel { display: flex; flex-direction: column; }
+    .message { border-bottom: 1px solid rgba(255,255,255,0.1); padding: 1rem 0; }
+    .ai-reply-box { background: rgba(99,102,241,0.2); border: 1px solid rgba(129,140,248,0.3); border-radius: 12px; padding: 0.8rem; margin-top: 0.5rem; }
+    .tag { font-size: 0.7rem; padding: 2px 8px; border-radius: 20px; font-weight: 600; }
+    .tag-hot { background: rgba(239,68,68,0.3); color: #fca5a5; }
+    .tag-query { background: rgba(59,130,246,0.3); color: #93c5fd; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(130px, 1fr)); gap: 1rem; margin-bottom: 1.5rem; }
+    .stat-card { padding: 1rem; border-radius: 16px; display: flex; align-items: center; gap: 0.8rem; }
+    .tab-btn { padding: 0.5rem 1.5rem; border-radius: 12px; border: none; background: transparent; color: #cbd5e1; font-weight: 600; cursor: pointer; transition: 0.2s; }
+    .tab-btn.active { background: white; color: #1e1b4b; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+    .scrollable { overflow-y: auto; max-height: 60vh; }
+    .sidebar-section { background: rgba(255,255,255,0.05); backdrop-filter: blur(12px); border-radius: 16px; padding: 1.2rem; margin-bottom: 1rem; border: 1px solid rgba(255,255,255,0.1); }
   </style>
 </head>
 <body>
-<div class="container">
+  <div class="bg-animated"></div>
+  <div class="orb orb1"></div>
+  <div class="orb orb2"></div>
+  <div class="orb orb3"></div>
 
-  <!-- Header -->
-  <div class="header">
-    <div style="display: flex; align-items: center; gap: 12px;">
-      <div style="font-size: 2rem;">🤖</div>
-      <div>
-        <h1>DM Automator Pro</h1>
-        <p style="font-size: 0.9rem; opacity: 0.85;">Multi‑Platform AI Assistant</p>
-      </div>
+  <!-- Login Screen -->
+  <div id="loginScreen" class="screen">
+    <div class="login-card">
+      <h1>🤖 DM Automator</h1>
+      <p style="color:#a5b4fc; margin-bottom:1.5rem;">Secure 2‑Factor Login</p>
+      <input type="email" id="emailInput" class="input-field" placeholder="Email" value="">
+      <input type="password" id="passwordInput" class="input-field" placeholder="Password">
+      <button class="btn" onclick="handleLogin()">Continue</button>
+      <p id="loginError" style="color:#f87171; margin-top:1rem; display:none;"></p>
+      <p style="margin-top:1rem; font-size:0.8rem; color:#94a3b8;">Demo: OTP will appear after login</p>
     </div>
-    <div class="status">✅ All Accounts Connected (Demo)</div>
   </div>
 
-  <!-- Tabs -->
-  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 5px;">
-    <div class="tabs" id="tabContainer">
-      <button class="tab active" data-platform="instagram">📷 Instagram</button>
-      <button class="tab" data-platform="whatsapp">💬 WhatsApp</button>
-      <button class="tab" data-platform="facebook">👍 Facebook</button>
+  <!-- OTP Screen -->
+  <div id="otpScreen" class="screen hidden">
+    <div class="login-card">
+      <h1>🔐 Verify OTP</h1>
+      <p style="color:#a5b4fc;">OTP sent to <span id="otpEmailDisplay"></span></p>
+      <p style="color:#fbbf24; margin:0.5rem 0;">Demo OTP: <strong id="shownOTP"></strong></p>
+      <input type="text" id="otpInput" class="input-field" placeholder="Enter OTP" maxlength="6" style="text-align:center; letter-spacing:0.3em; font-size:1.2rem;">
+      <button class="btn" onclick="handleVerifyOTP()">Verify & Enter</button>
+      <p id="otpError" style="color:#f87171; margin-top:1rem; display:none;"></p>
     </div>
-    <button class="btn btn-outline" id="connectBtn" style="padding: 12px 20px; font-size: 0.9rem;">
-      🔗 Connect <span id="connectLabel">Instagram</span> (Demo)
-    </button>
   </div>
 
-  <!-- Stats -->
-  <div class="stats-grid" id="statsGrid"></div>
-
-  <!-- Main Layout -->
-  <div class="main-layout">
-    <!-- Inbox -->
-    <div class="glass" style="padding: 20px;">
-      <h2 style="margin-bottom: 15px;">📥 <span id="inboxTitle">Instagram</span> Inbox</h2>
-      <div class="inbox" id="inboxContainer"></div>
-    </div>
-
-    <!-- Sidebar -->
-    <div class="sidebar">
-      <div class="glass" style="padding: 20px;">
-        <h3>🔥 Hot Leads</h3>
-        <ul id="hotLeadsList" style="list-style: none; margin-top: 10px; font-size: 0.9rem;"></ul>
-      </div>
-      <div class="glass" style="padding: 20px;">
-        <h3>⚙️ AI Mode</h3>
-        <select id="modeSelect" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px;">
-          <option value="suggest">Suggest Replies (Manual)</option>
-          <option value="auto">Auto-Reply (AI handles all)</option>
-        </select>
-      </div>
-      <div class="glass" style="padding: 20px;">
-        <h3>📊 Sentiment</h3>
-        <div style="font-size: 2rem; font-weight: 700;">😊 78%</div>
-        <div style="font-size: 0.8rem;">😐 18% &nbsp;|&nbsp; 😞 4%</div>
-      </div>
-      <div class="glass" style="padding: 20px;">
-        <h3>🔗 Connected Accounts</h3>
-        <div style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem;">
-          <span>📷 @yourbrand_insta <span style="color:green;">✔️</span></span>
-          <span>💬 +91 98765 43210 <span style="color:green;">✔️</span></span>
-          <span>👍 fb.com/yourpage <span style="color:green;">✔️</span></span>
+  <!-- Dashboard Screen -->
+  <div id="dashboardScreen" class="screen hidden" style="display:block;">
+    <div class="dashboard-container">
+      <div class="header">
+        <div style="display:flex; align-items:center; gap:0.8rem;">
+          <span style="font-size:2rem;">🤖</span>
+          <h1 style="font-size:1.5rem;">DM Automator Pro</h1>
+        </div>
+        <div style="display:flex; align-items:center; gap:1rem;">
+          <span style="background:rgba(255,255,255,0.1); padding:0.3rem 1rem; border-radius:20px; font-size:0.85rem;">✅ Connected</span>
+          <button class="btn-outline" style="width:auto; padding:0.4rem 1.2rem;" onclick="handleLogout()">Logout</button>
         </div>
       </div>
-    </div>
-  </div>
-</div>
-
-<script>
-  // ------------------ DATA ------------------
-  const messages = [
-    // Instagram
-    { id:1, plat:'instagram', sender:'shivani_k', msg:'Dress ka price batao na', tag:'query', aiReply:'Hi Shivani! ❤️ Dress ₹1499 se start. Abhi order pe free delivery.' },
-    { id:2, plat:'instagram', sender:'rohit_fitness', msg:'Protein powder bulk mein chahiye', tag:'hot', aiReply:'Rohit bhai, bulk order pe 20% off. WhatsApp number do, quotation bhejte hain.' },
-    { id:3, plat:'instagram', sender:'mona_art', msg:'Custom painting karva sakte?', tag:'query', aiReply:'Mona ji, haan custom paintings available hain. Size aur theme DM karo.' },
-    { id:4, plat:'instagram', sender:'deepak_22', msg:'Phone cover iPhone 14 ke liye?', tag:'query', aiReply:'Deepak, haan available hai. ₹499. Link bhej dein?' },
-    { id:5, plat:'instagram', sender:'pretty_petals', msg:'Flower bouquet kal subah chahiye', tag:'hot', aiReply:'Bilkul, subah 10 baje tak deliver ho jayega. Pincode batao.' },
-    { id:6, plat:'instagram', sender:'vivek_vlogs', msg:'Collab karna hai', tag:'query', aiReply:'Vivek, collab ke liye mail bhejo: collab@yourbrand.com' },
-    { id:7, plat:'instagram', sender:'sara_makeup', msg:'Lipstick shade no.5 kab aayega?', tag:'query', aiReply:'Sara, agle hafta stock aa raha. Notify karte hain.' },
-    { id:8, plat:'instagram', sender:'chef_rahul', msg:'Bakery equipment list bhejo', tag:'hot', aiReply:'Rahul ji, poora catalog WhatsApp pe share kiya. Check karein.' },
-    { id:9, plat:'instagram', sender:'gym_bro_77', msg:'Supplement expiry date?', tag:'query', aiReply:'Sabhi products fresh stock hain, 2026 expiry. Chill karo.' },
-    { id:10, plat:'instagram', sender:'pihu_fashion', msg:'Saree konsi best hai shaadi ke liye?', tag:'query', aiReply:'Pihu, Kanjeevaram silk recommend karte hain. Price ₹5999. Pics bhejein?' },
-    // WhatsApp
-    { id:11, plat:'whatsapp', sender:'Anil Gupta', msg:'Kal meeting ka time kya hai?', tag:'query', aiReply:'Anil ji, kal subah 11 baje, board room. Aa rahe hain aap?' },
-    { id:12, plat:'whatsapp', sender:'Priya Patel', msg:'Order #1023 status batao', tag:'query', aiReply:'Priya ji, order shipped, tracking link: track.dtdc.in/1023' },
-    { id:13, plat:'whatsapp', sender:'Rajesh Khanna', msg:'15 phones bulk order dena hai', tag:'hot', aiReply:'Rajesh sir, bulk price ₹9500/piece. Delivery 7 days. Invoice ready karein?' },
-    { id:14, plat:'whatsapp', sender:'Sunita Yadav', msg:'EMI option hai kya?', tag:'query', aiReply:'Sunita ma’am, haan 0% EMI on orders above ₹5000. Bajaj Finserv.' },
-    { id:15, plat:'whatsapp', sender:'Amit Jain', msg:'Complaint: wrong item delivered', tag:'hot', aiReply:'Amit ji, sorry for inconvenience. Pickup kal ho jayega, replacement bhi. Regret.' },
-    { id:16, plat:'whatsapp', sender:'Neha Sharma', msg:'Gift wrapping kar sakte?', tag:'query', aiReply:'Neha ji, bilkul free gift wrap. Bas cart mein mention kar dein.' },
-    { id:17, plat:'whatsapp', sender:'Vikram Singh', msg:'Bill chahiye GST ke liye', tag:'query', aiReply:'Vikram ji, GST invoice WhatsApp pe bhej diya. Check karo.' },
-    { id:18, plat:'whatsapp', sender:'Ritu Kapoor', msg:'Exchange policy batao', tag:'query', aiReply:'Ritu ji, 7 din mein exchange free. Sirf tag intact hona chahiye.' },
-    { id:19, plat:'whatsapp', sender:'Mohan Reddy', msg:'Wholesale price list bhejo', tag:'hot', aiReply:'Mohan saab, abhi PDF bhejte hain. Minimum order 50 pieces.' },
-    { id:20, plat:'whatsapp', sender:'Sneha Iyer', msg:'Appointment book karna hai', tag:'query', aiReply:'Sneha ji, kal 3 baje slot khali hai. Confirm karein.' },
-    // Facebook
-    { id:21, plat:'facebook', sender:'Rahul Agarwal', msg:'Page promotion kaise karein?', tag:'query', aiReply:'Rahul ji, paid ads best rahenge. Budget batao, plan de dein.' },
-    { id:22, plat:'facebook', sender:'Kriti Das', msg:'Dance class ke liye enquiry', tag:'hot', aiReply:'Kriti, offline batch kal se start. Fees ₹2000/month. Aaogi?' },
-    { id:23, plat:'facebook', sender:'Sumit Bhai', msg:'Car accessories ka rate?', tag:'query', aiReply:'Sumit bhai, headlights ₹899, seat cover ₹1599. Free shipping.' },
-    { id:24, plat:'facebook', sender:'Ananya Mehra', msg:'Wedding shoot package?', tag:'hot', aiReply:'Ananya, pre-wedding ₹15k. Sample pics bhejein? Bahut romantic shots.' },
-    { id:25, plat:'facebook', sender:'Gaurav Saini', msg:'Old sofa bechna hai', tag:'query', aiReply:'Gaurav, pic bhejo, OLX pe daal dete hain. Service charge ₹300.' },
-    { id:26, plat:'facebook', sender:'Deepika Pillai', msg:'Mehndi artist chahiye Sunday', tag:'hot', aiReply:'Deepika, available hai. Rate ₹2500 full hand. Book kar dein?' },
-    { id:27, plat:'facebook', sender:'Arvind Kejriwal', msg:'Muffler kahan milega?', tag:'query', aiReply:'Arvind ji, muffler.com pe check karo. ₹399 mein best.' },
-    { id:28, plat:'facebook', sender:'Shweta Tiwari', msg:'Nanny service available?', tag:'query', aiReply:'Shweta ma’am, verified nanny ₹8000/month. Kal trial pe bhejein?' },
-    { id:29, plat:'facebook', sender:'Yogesh Patil', msg:'Plumber bhejo emergency', tag:'hot', aiReply:'Yogesh bhai, 1 ghante mein pahunch raha. Address bhejo.' },
-    { id:30, plat:'facebook', sender:'Komal Sharma', msg:'Receipt generate karo', tag:'query', aiReply:'Komal, receipt email pe bhej di. Spam folder check karo.' }
-  ];
-
-  let activeTab = 'instagram';
-
-  // ------------------ UI UPDATE FUNCTIONS ------------------
-  function updateUI() {
-    const filtered = messages.filter(m => m.plat === activeTab);
-    document.getElementById('inboxTitle').textContent = activeTab.charAt(0).toUpperCase()+activeTab.slice(1);
-    document.getElementById('connectLabel').textContent = activeTab.charAt(0).toUpperCase()+activeTab.slice(1);
-
-    // Stats
-    const hotCount = filtered.filter(m => m.tag === 'hot').length;
-    document.getElementById('statsGrid').innerHTML = `
-      <div class="stat-card glass">
-        <div class="icon-box" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">💬</div>
-        <div><div class="stat-number">${filtered.length}</div><div class="stat-label">Total ${activeTab} Msgs</div></div>
-      </div>
-      <div class="stat-card glass">
-        <div class="icon-box" style="background: linear-gradient(135deg, #f97316, #ef4444);">🔥</div>
-        <div><div class="stat-number">${hotCount}</div><div class="stat-label">Hot Leads</div></div>
-      </div>
-      <div class="stat-card glass">
-        <div class="icon-box" style="background: linear-gradient(135deg, #10b981, #14b8a6);">✨</div>
-        <div><div class="stat-number">${filtered.length}</div><div class="stat-label">AI Replies Ready</div></div>
-      </div>
-      <div class="stat-card glass">
-        <div class="icon-box" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">💰</div>
-        <div><div class="stat-number">₹12.4k</div><div class="stat-label">Pipeline Value</div></div>
-      </div>
-    `;
-
-    // Inbox
-    const inboxHTML = filtered.map(m => `
-      <div class="message">
-        <div class="msg-header">
-          <span class="sender">${m.sender} <span class="badge ${m.tag==='hot'?'badge-hot':'badge-query'}">${m.tag==='hot'?'🔥 Hot Lead':'💬 Query'}</span></span>
-          <span style="font-size:0.75rem; color:#888;">just now</span>
+      <div class="main-content">
+        <!-- Inbox Column -->
+        <div class="inbox-panel">
+          <div class="stats-grid" id="statsGrid"></div>
+          <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; flex-wrap:wrap;">
+            <div style="display:flex; gap:0.5rem; background:rgba(0,0,0,0.3); border-radius:12px; padding:0.3rem;">
+              <button class="tab-btn active" data-tab="instagram" onclick="switchTab('instagram')">📷 Instagram</button>
+              <button class="tab-btn" data-tab="whatsapp" onclick="switchTab('whatsapp')">💬 WhatsApp</button>
+              <button class="tab-btn" data-tab="facebook" onclick="switchTab('facebook')">👍 Facebook</button>
+            </div>
+            <button class="btn-outline" style="width:auto;" onclick="alert('Connect account (demo)')">🔗 Connect</button>
+          </div>
+          <div class="scrollable glass-card" style="padding:1rem;" id="inboxContainer"></div>
         </div>
-        <div>${m.msg}</div>
-        <div class="ai-reply">
-          <div><strong>💡 AI Reply:</strong> "${m.aiReply}"</div>
-          <div style="margin-top:8px;">
-            <button class="btn btn-primary" onclick="alert('Message sent (demo)')">Send</button>
-            <button class="btn btn-outline">Edit</button>
-            <button class="btn btn-outline" style="margin-left:auto;" onclick="simulateAIRegenerate(${m.id})" id="regen-${m.id}">🔄 Regenerate</button>
+        <!-- Sidebar -->
+        <div>
+          <div class="sidebar-section">
+            <h3 style="margin-bottom:0.8rem;">🔥 Hot Leads</h3>
+            <div id="hotLeadsList" style="font-size:0.9rem;"></div>
+          </div>
+          <div class="sidebar-section">
+            <h3 style="margin-bottom:0.8rem;">⚙️ AI Mode</h3>
+            <select id="modeSelect" style="width:100%; padding:0.5rem; background:rgba(255,255,255,0.1); border:1px solid rgba(255,255,255,0.2); border-radius:8px; color:white;">
+              <option value="suggest">Suggest Replies (Manual)</option>
+              <option value="auto">Auto-Reply (AI handles all)</option>
+            </select>
+          </div>
+          <div class="sidebar-section">
+            <h3>📊 Sentiment</h3>
+            <div style="font-size:2rem; font-weight:bold;">😊 78%</div>
+            <div style="font-size:0.8rem;">😐 18% &nbsp;|&nbsp; 😞 4%</div>
+          </div>
+          <div class="sidebar-section">
+            <h3>🔗 Connected Accounts</h3>
+            <div style="font-size:0.85rem; display:flex; flex-direction:column; gap:0.4rem;">
+              <span>📷 @yourbrand_insta ✅</span>
+              <span>💬 +91 9876543210 ✅</span>
+              <span>👍 fb.com/yourpage ✅</span>
+            </div>
           </div>
         </div>
       </div>
-    `).join('');
-    document.getElementById('inboxContainer').innerHTML = inboxHTML;
+    </div>
+  </div>
 
-    // Hot Leads list
-    const hotLeads = filtered.filter(m => m.tag==='hot').slice(0,5);
-    const hotHTML = hotLeads.map(m => `<li style="margin-bottom:6px; display:flex; align-items:center; gap:6px;">🔴 <strong>${m.sender}</strong> - ${m.msg.slice(0,20)}...</li>`).join('');
-    document.getElementById('hotLeadsList').innerHTML = hotHTML || '<li style="color:gray;">No hot leads</li>';
-  }
+  <script>
+    // ---------- AUTH ----------
+    const VALID_EMAIL = "kdeep003889@gmail.com";
+    const VALID_PASSWORD = "Karandeep0714";
+    const DEMO_OTP = "123456";
 
-  // Simulate AI regeneration (shows loading then switches reply to a random funny one)
-  function simulateAIRegenerate(id) {
-    const btn = document.getElementById('regen-'+id);
-    btn.disabled = true;
-    btn.textContent = '⏳ Thinking...';
-    setTimeout(() => {
-      const fallbackReplies = [
-        "Haan bilkul, abhi check karta hoon. 😊",
-        "Aapka order process ho raha hai, thoda wait karo.",
-        "Sure! Main aapko details bhej deta hoon.",
-        "Thank you for reaching out! Aapka sawaal note kar liya.",
-        "Apologies for delay. Team update de rahi hai."
-      ];
-      const randomReply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
-      // Find message and update aiReply
-      const msg = messages.find(m => m.id === id);
-      if (msg) msg.aiReply = randomReply;
-      btn.textContent = '🔄 Regenerate';
-      btn.disabled = false;
-      updateUI();
-    }, 1200);
-  }
+    let otpScreen = document.getElementById('otpScreen');
+    let loginScreen = document.getElementById('loginScreen');
+    let dashboardScreen = document.getElementById('dashboardScreen');
+    let otpDisplay = document.getElementById('shownOTP');
+    let otpEmailDisplay = document.getElementById('otpEmailDisplay');
 
-  // Tab switching
-  document.getElementById('tabContainer').addEventListener('click', (e) => {
-    if (e.target.classList.contains('tab')) {
-      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
-      e.target.classList.add('active');
-      activeTab = e.target.dataset.platform;
-      updateUI();
+    function handleLogin() {
+      const email = document.getElementById('emailInput').value.trim();
+      const password = document.getElementById('passwordInput').value;
+      const errorEl = document.getElementById('loginError');
+      if (email !== VALID_EMAIL || password !== VALID_PASSWORD) {
+        errorEl.textContent = "Invalid email or password!";
+        errorEl.style.display = "block";
+        return;
+      }
+      errorEl.style.display = "none";
+      // Show OTP screen
+      otpDisplay.textContent = DEMO_OTP;
+      otpEmailDisplay.textContent = email;
+      loginScreen.classList.add('hidden');
+      otpScreen.classList.remove('hidden');
     }
-  });
 
-  // Connect button (demo alert)
-  document.getElementById('connectBtn').addEventListener('click', () => {
-    alert(`This would open OAuth to connect your ${activeTab} account. (Demo)`);
-  });
+    function handleVerifyOTP() {
+      const otp = document.getElementById('otpInput').value.trim();
+      const errorEl = document.getElementById('otpError');
+      if (otp !== DEMO_OTP) {
+        errorEl.textContent = "Invalid OTP!";
+        errorEl.style.display = "block";
+        return;
+      }
+      errorEl.style.display = "none";
+      otpScreen.classList.add('hidden');
+      dashboardScreen.classList.remove('hidden');
+      initDashboard();
+    }
 
-  // Initial load
-  updateUI();
-</script>
+    function handleLogout() {
+      dashboardScreen.classList.add('hidden');
+      loginScreen.classList.remove('hidden');
+      document.getElementById('emailInput').value = '';
+      document.getElementById('passwordInput').value = '';
+      document.getElementById('otpInput').value = '';
+    }
+
+    // ---------- DATA ----------
+    const allMessages = [
+      // Instagram
+      { id:1, plat:'instagram', sender:'shivani_k', msg:'Dress ka price batao na', tag:'query', aiReply:'Hi Shivani! ❤️ Dress ₹1499 se start. Abhi order pe free delivery.' },
+      { id:2, plat:'instagram', sender:'rohit_fitness', msg:'Protein powder bulk mein chahiye', tag:'hot', aiReply:'Rohit bhai, bulk order pe 20% off. WhatsApp number do, quotation bhejte hain.' },
+      { id:3, plat:'instagram', sender:'mona_art', msg:'Custom painting karva sakte?', tag:'query', aiReply:'Mona ji, haan custom paintings available hain. Size aur theme DM karo.' },
+      { id:4, plat:'instagram', sender:'deepak_22', msg:'Phone cover iPhone 14 ke liye?', tag:'query', aiReply:'Deepak, haan available hai. ₹499. Link bhej dein?' },
+      { id:5, plat:'instagram', sender:'pretty_petals', msg:'Flower bouquet kal subah chahiye', tag:'hot', aiReply:'Bilkul, subah 10 baje tak deliver ho jayega. Pincode batao.' },
+      { id:6, plat:'instagram', sender:'vivek_vlogs', msg:'Collab karna hai', tag:'query', aiReply:'Vivek, collab ke liye mail bhejo: collab@yourbrand.com' },
+      { id:7, plat:'instagram', sender:'sara_makeup', msg:'Lipstick shade no.5 kab aayega?', tag:'query', aiReply:'Sara, agle hafta stock aa raha. Notify karte hain.' },
+      { id:8, plat:'instagram', sender:'chef_rahul', msg:'Bakery equipment list bhejo', tag:'hot', aiReply:'Rahul ji, poora catalog WhatsApp pe share kiya. Check karein.' },
+      { id:9, plat:'instagram', sender:'gym_bro_77', msg:'Supplement expiry date?', tag:'query', aiReply:'Sabhi products fresh stock hain, 2026 expiry. Chill karo.' },
+      { id:10, plat:'instagram', sender:'pihu_fashion', msg:'Saree konsi best hai shaadi ke liye?', tag:'query', aiReply:'Pihu, Kanjeevaram silk recommend karte hain. Price ₹5999. Pics bhejein?' },
+      // WhatsApp
+      { id:11, plat:'whatsapp', sender:'Anil Gupta', msg:'Kal meeting ka time kya hai?', tag:'query', aiReply:'Anil ji, kal subah 11 baje, board room. Aa rahe hain aap?' },
+      { id:12, plat:'whatsapp', sender:'Priya Patel', msg:'Order #1023 status batao', tag:'query', aiReply:'Priya ji, order shipped, tracking link: track.dtdc.in/1023' },
+      { id:13, plat:'whatsapp', sender:'Rajesh Khanna', msg:'15 phones bulk order dena hai', tag:'hot', aiReply:'Rajesh sir, bulk price ₹9500/piece. Delivery 7 days. Invoice ready karein?' },
+      { id:14, plat:'whatsapp', sender:'Sunita Yadav', msg:'EMI option hai kya?', tag:'query', aiReply:'Sunita ma’am, haan 0% EMI on orders above ₹5000. Bajaj Finserv.' },
+      { id:15, plat:'whatsapp', sender:'Amit Jain', msg:'Complaint: wrong item delivered', tag:'hot', aiReply:'Amit ji, sorry for inconvenience. Pickup kal ho jayega, replacement bhi. Regret.' },
+      { id:16, plat:'whatsapp', sender:'Neha Sharma', msg:'Gift wrapping kar sakte?', tag:'query', aiReply:'Neha ji, bilkul free gift wrap. Bas cart mein mention kar dein.' },
+      { id:17, plat:'whatsapp', sender:'Vikram Singh', msg:'Bill chahiye GST ke liye', tag:'query', aiReply:'Vikram ji, GST invoice WhatsApp pe bhej diya. Check karo.' },
+      { id:18, plat:'whatsapp', sender:'Ritu Kapoor', msg:'Exchange policy batao', tag:'query', aiReply:'Ritu ji, 7 din mein exchange free. Sirf tag intact hona chahiye.' },
+      { id:19, plat:'whatsapp', sender:'Mohan Reddy', msg:'Wholesale price list bhejo', tag:'hot', aiReply:'Mohan saab, abhi PDF bhejte hain. Minimum order 50 pieces.' },
+      { id:20, plat:'whatsapp', sender:'Sneha Iyer', msg:'Appointment book karna hai', tag:'query', aiReply:'Sneha ji, kal 3 baje slot khali hai. Confirm karein.' },
+      // Facebook
+      { id:21, plat:'facebook', sender:'Rahul Agarwal', msg:'Page promotion kaise karein?', tag:'query', aiReply:'Rahul ji, paid ads best rahenge. Budget batao, plan de dein.' },
+      { id:22, plat:'facebook', sender:'Kriti Das', msg:'Dance class ke liye enquiry', tag:'hot', aiReply:'Kriti, offline batch kal se start. Fees ₹2000/month. Aaogi?' },
+      { id:23, plat:'facebook', sender:'Sumit Bhai', msg:'Car accessories ka rate?', tag:'query', aiReply:'Sumit bhai, headlights ₹899, seat cover ₹1599. Free shipping.' },
+      { id:24, plat:'facebook', sender:'Ananya Mehra', msg:'Wedding shoot package?', tag:'hot', aiReply:'Ananya, pre-wedding ₹15k. Sample pics bhejein? Bahut romantic shots.' },
+      { id:25, plat:'facebook', sender:'Gaurav Saini', msg:'Old sofa bechna hai', tag:'query', aiReply:'Gaurav, pic bhejo, OLX pe daal dete hain. Service charge ₹300.' },
+      { id:26, plat:'facebook', sender:'Deepika Pillai', msg:'Mehndi artist chahiye Sunday', tag:'hot', aiReply:'Deepika, available hai. Rate ₹2500 full hand. Book kar dein?' },
+      { id:27, plat:'facebook', sender:'Arvind Kejriwal', msg:'Muffler kahan milega?', tag:'query', aiReply:'Arvind ji, muffler.com pe check karo. ₹399 mein best.' },
+      { id:28, plat:'facebook', sender:'Shweta Tiwari', msg:'Nanny service available?', tag:'query', aiReply:'Shweta ma’am, verified nanny ₹8000/month. Kal trial pe bhejein?' },
+      { id:29, plat:'facebook', sender:'Yogesh Patil', msg:'Plumber bhejo emergency', tag:'hot', aiReply:'Yogesh bhai, 1 ghante mein pahunch raha. Address bhejo.' },
+      { id:30, plat:'facebook', sender:'Komal Sharma', msg:'Receipt generate karo', tag:'query', aiReply:'Komal, receipt email pe bhej di. Spam folder check karo.' }
+    ];
+
+    let activeTab = 'instagram';
+    let replies = {}; // for live regeneration override
+
+    function initDashboard() {
+      updateDashboard();
+    }
+
+    function switchTab(tab) {
+      activeTab = tab;
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tab === tab);
+      });
+      updateDashboard();
+    }
+
+    function updateDashboard() {
+      const filtered = allMessages.filter(m => m.plat === activeTab);
+      const hotCount = filtered.filter(m => m.tag === 'hot').length;
+
+      // Stats
+      document.getElementById('statsGrid').innerHTML = `
+        <div class="stat-card glass-card">
+          <span style="font-size:1.8rem;">💬</span>
+          <div><strong style="font-size:1.5rem;">${filtered.length}</strong><br><small>Total Msgs</small></div>
+        </div>
+        <div class="stat-card glass-card">
+          <span style="font-size:1.8rem;">🔥</span>
+          <div><strong style="font-size:1.5rem;">${hotCount}</strong><br><small>Hot Leads</small></div>
+        </div>
+        <div class="stat-card glass-card">
+          <span style="font-size:1.8rem;">✨</span>
+          <div><strong style="font-size:1.5rem;">${filtered.length}</strong><br><small>AI Replies</small></div>
+        </div>
+        <div class="stat-card glass-card">
+          <span style="font-size:1.8rem;">💰</span>
+          <div><strong style="font-size:1.5rem;">₹12.4k</strong><br><small>Pipeline</small></div>
+        </div>
+      `;
+
+      // Inbox
+      let inboxHTML = '';
+      filtered.forEach(msg => {
+        const currentReply = replies[msg.id] || msg.aiReply;
+        inboxHTML += `
+          <div class="message">
+            <div style="display:flex; justify-content:space-between; margin-bottom:0.3rem;">
+              <span><strong>${msg.sender}</strong> <span class="tag ${msg.tag==='hot' ? 'tag-hot' : 'tag-query'}">${msg.tag==='hot' ? '🔥 Hot Lead' : '💬 Query'}</span></span>
+              <span style="color:#94a3b8; font-size:0.75rem;">just now</span>
+            </div>
+            <p style="color:#cbd5e1;">${msg.msg}</p>
+            <div class="ai-reply-box">
+              <p><span style="color:#a5b4fc;">💡 AI:</span> ${currentReply}</p>
+              <div style="margin-top:0.5rem; display:flex; gap:0.5rem;">
+                <button class="btn" style="width:auto; padding:0.3rem 1rem;" onclick="alert('Sent (demo)')">Send</button>
+                <button class="btn-outline" style="width:auto;" onclick="alert('Edit (demo)')">Edit</button>
+                <button class="btn-outline" style="width:auto; margin-left:auto;" onclick="regenerateReply(${msg.id})" id="regen-${msg.id}">🔄 Regenerate</button>
+              </div>
+            </div>
+          </div>
+        `;
+      });
+      document.getElementById('inboxContainer').innerHTML = inboxHTML;
+
+      // Hot Leads Sidebar
+      const hotLeads = filtered.filter(m => m.tag === 'hot').slice(0,5);
+      let hotHTML = '';
+      if (hotLeads.length === 0) hotHTML = '<p>No hot leads</p>';
+      else hotLeads.forEach(m => hotHTML += `<div style="margin-bottom:0.3rem;">🔴 <strong>${m.sender}</strong> - ${m.msg.slice(0,20)}...</div>`);
+      document.getElementById('hotLeadsList').innerHTML = hotHTML;
+    }
+
+    function regenerateReply(id) {
+      const btn = document.getElementById('regen-'+id);
+      btn.disabled = true;
+      btn.textContent = '⏳ Thinking...';
+      setTimeout(() => {
+        const fallback = [
+          "Haan bilkul, abhi check karta hoon. 😊",
+          "Aapka order process ho raha hai, thoda wait karo.",
+          "Sure! Main aapko details bhej deta hoon.",
+          "Thank you for reaching out! Aapka sawaal note kar liya.",
+          "Apologies for delay. Team update de rahi hai."
+        ];
+        const random = fallback[Math.floor(Math.random()*fallback.length)];
+        replies[id] = random;
+        btn.textContent = '🔄 Regenerate';
+        btn.disabled = false;
+        updateDashboard(); // refresh to show new reply
+      }, 1200);
+    }
+
+    // Initial state: show login only
+    document.addEventListener('DOMContentLoaded', () => {
+      loginScreen.classList.remove('hidden');
+      otpScreen.classList.add('hidden');
+      dashboardScreen.classList.add('hidden');
+      // Pre-fill email for demo convenience
+      document.getElementById('emailInput').value = VALID_EMAIL;
+    });
+  </script>
 </body>
 </html>
