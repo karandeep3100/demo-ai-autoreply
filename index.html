@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>AI DM Automator | Multi-Platform Demo</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #f0f4ff 0%, #e4ebf5 100%);
+      min-height: 100vh;
+      color: #1a1a1a;
+    }
+    .container { max-width: 1200px; margin: auto; padding: 20px; }
+
+    /* Header gradient */
+    .header {
+      background: linear-gradient(135deg, #4f46e5, #7c3aed, #db2777);
+      color: white; padding: 20px 25px; border-radius: 20px;
+      margin-bottom: 25px; display: flex; justify-content: space-between;
+      align-items: center; flex-wrap: wrap; gap: 15px;
+      box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+    }
+    .header h1 { font-weight: 700; font-size: 1.8rem; }
+    .header .status { background: rgba(255,255,255,0.2); padding: 8px 16px; border-radius: 30px; }
+
+    /* Glass cards */
+    .glass {
+      background: rgba(255,255,255,0.7);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255,255,255,0.3);
+      border-radius: 20px;
+      box-shadow: 0 5px 15px rgba(0,0,0,0.02);
+    }
+
+    /* Tabs */
+    .tabs {
+      display: flex; gap: 5px; background: rgba(255,255,255,0.6);
+      backdrop-filter: blur(8px); border-radius: 14px; padding: 5px;
+      margin-bottom: 20px; width: fit-content;
+    }
+    .tab {
+      padding: 10px 22px; border-radius: 12px; cursor: pointer;
+      font-weight: 600; transition: all 0.2s; border: none; background: transparent;
+    }
+    .tab.active {
+      background: white; box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+      color: #4338ca; border-bottom: 2px solid #4338ca;
+    }
+    .tab:hover:not(.active) { background: rgba(255,255,255,0.7); }
+
+    /* Stats */
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 15px; margin-bottom: 25px; }
+    .stat-card {
+      display: flex; align-items: center; gap: 12px; padding: 18px;
+    }
+    .icon-box {
+      width: 44px; height: 44px; border-radius: 14px; display: flex;
+      align-items: center; justify-content: center; font-size: 1.4rem; color: white;
+    }
+    .stat-number { font-size: 1.8rem; font-weight: 700; }
+    .stat-label { font-size: 0.8rem; color: #555; }
+
+    /* Inbox */
+    .inbox { max-height: 600px; overflow-y: auto; }
+    .message {
+      border-bottom: 1px solid #e5e7eb; padding: 16px 0;
+      display: flex; flex-direction: column; gap: 8px;
+    }
+    .msg-header { display: flex; justify-content: space-between; }
+    .sender { font-weight: 600; }
+    .badge {
+      font-size: 0.7rem; padding: 2px 8px; border-radius: 20px;
+      font-weight: 600; margin-left: 8px;
+    }
+    .badge-hot { background: #fee2e2; color: #b91c1c; }
+    .badge-query { background: #dbeafe; color: #1e40af; }
+
+    .ai-reply {
+      background: linear-gradient(to right, #eef2ff, #f3e8ff);
+      border: 1px solid #c7d2fe; border-radius: 14px; padding: 12px;
+      margin-top: 5px; font-size: 0.85rem;
+    }
+    .btn {
+      border: none; border-radius: 10px; padding: 8px 16px;
+      font-weight: 600; cursor: pointer; transition: all 0.2s; font-size: 0.8rem;
+      margin-right: 6px;
+    }
+    .btn-primary { background: #4338ca; color: white; }
+    .btn-primary:hover { background: #3730a3; }
+    .btn-outline { background: white; border: 1px solid #d1d5db; }
+    .btn-outline:hover { background: #f9fafb; }
+
+    .sidebar { display: flex; flex-direction: column; gap: 16px; }
+
+    @media (max-width: 768px) {
+      .header { flex-direction: column; text-align: center; }
+      .main-layout { grid-template-columns: 1fr; }
+    }
+    .main-layout { display: grid; grid-template-columns: 2fr 1fr; gap: 20px; }
+  </style>
+</head>
+<body>
+<div class="container">
+
+  <!-- Header -->
+  <div class="header">
+    <div style="display: flex; align-items: center; gap: 12px;">
+      <div style="font-size: 2rem;">🤖</div>
+      <div>
+        <h1>DM Automator Pro</h1>
+        <p style="font-size: 0.9rem; opacity: 0.85;">Multi‑Platform AI Assistant</p>
+      </div>
+    </div>
+    <div class="status">✅ All Accounts Connected (Demo)</div>
+  </div>
+
+  <!-- Tabs -->
+  <div style="display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; margin-bottom: 5px;">
+    <div class="tabs" id="tabContainer">
+      <button class="tab active" data-platform="instagram">📷 Instagram</button>
+      <button class="tab" data-platform="whatsapp">💬 WhatsApp</button>
+      <button class="tab" data-platform="facebook">👍 Facebook</button>
+    </div>
+    <button class="btn btn-outline" id="connectBtn" style="padding: 12px 20px; font-size: 0.9rem;">
+      🔗 Connect <span id="connectLabel">Instagram</span> (Demo)
+    </button>
+  </div>
+
+  <!-- Stats -->
+  <div class="stats-grid" id="statsGrid"></div>
+
+  <!-- Main Layout -->
+  <div class="main-layout">
+    <!-- Inbox -->
+    <div class="glass" style="padding: 20px;">
+      <h2 style="margin-bottom: 15px;">📥 <span id="inboxTitle">Instagram</span> Inbox</h2>
+      <div class="inbox" id="inboxContainer"></div>
+    </div>
+
+    <!-- Sidebar -->
+    <div class="sidebar">
+      <div class="glass" style="padding: 20px;">
+        <h3>🔥 Hot Leads</h3>
+        <ul id="hotLeadsList" style="list-style: none; margin-top: 10px; font-size: 0.9rem;"></ul>
+      </div>
+      <div class="glass" style="padding: 20px;">
+        <h3>⚙️ AI Mode</h3>
+        <select id="modeSelect" style="width:100%; padding:10px; border-radius:10px; border:1px solid #ccc; margin-top:8px;">
+          <option value="suggest">Suggest Replies (Manual)</option>
+          <option value="auto">Auto-Reply (AI handles all)</option>
+        </select>
+      </div>
+      <div class="glass" style="padding: 20px;">
+        <h3>📊 Sentiment</h3>
+        <div style="font-size: 2rem; font-weight: 700;">😊 78%</div>
+        <div style="font-size: 0.8rem;">😐 18% &nbsp;|&nbsp; 😞 4%</div>
+      </div>
+      <div class="glass" style="padding: 20px;">
+        <h3>🔗 Connected Accounts</h3>
+        <div style="display:flex; flex-direction:column; gap:6px; font-size:0.85rem;">
+          <span>📷 @yourbrand_insta <span style="color:green;">✔️</span></span>
+          <span>💬 +91 98765 43210 <span style="color:green;">✔️</span></span>
+          <span>👍 fb.com/yourpage <span style="color:green;">✔️</span></span>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+  // ------------------ DATA ------------------
+  const messages = [
+    // Instagram
+    { id:1, plat:'instagram', sender:'shivani_k', msg:'Dress ka price batao na', tag:'query', aiReply:'Hi Shivani! ❤️ Dress ₹1499 se start. Abhi order pe free delivery.' },
+    { id:2, plat:'instagram', sender:'rohit_fitness', msg:'Protein powder bulk mein chahiye', tag:'hot', aiReply:'Rohit bhai, bulk order pe 20% off. WhatsApp number do, quotation bhejte hain.' },
+    { id:3, plat:'instagram', sender:'mona_art', msg:'Custom painting karva sakte?', tag:'query', aiReply:'Mona ji, haan custom paintings available hain. Size aur theme DM karo.' },
+    { id:4, plat:'instagram', sender:'deepak_22', msg:'Phone cover iPhone 14 ke liye?', tag:'query', aiReply:'Deepak, haan available hai. ₹499. Link bhej dein?' },
+    { id:5, plat:'instagram', sender:'pretty_petals', msg:'Flower bouquet kal subah chahiye', tag:'hot', aiReply:'Bilkul, subah 10 baje tak deliver ho jayega. Pincode batao.' },
+    { id:6, plat:'instagram', sender:'vivek_vlogs', msg:'Collab karna hai', tag:'query', aiReply:'Vivek, collab ke liye mail bhejo: collab@yourbrand.com' },
+    { id:7, plat:'instagram', sender:'sara_makeup', msg:'Lipstick shade no.5 kab aayega?', tag:'query', aiReply:'Sara, agle hafta stock aa raha. Notify karte hain.' },
+    { id:8, plat:'instagram', sender:'chef_rahul', msg:'Bakery equipment list bhejo', tag:'hot', aiReply:'Rahul ji, poora catalog WhatsApp pe share kiya. Check karein.' },
+    { id:9, plat:'instagram', sender:'gym_bro_77', msg:'Supplement expiry date?', tag:'query', aiReply:'Sabhi products fresh stock hain, 2026 expiry. Chill karo.' },
+    { id:10, plat:'instagram', sender:'pihu_fashion', msg:'Saree konsi best hai shaadi ke liye?', tag:'query', aiReply:'Pihu, Kanjeevaram silk recommend karte hain. Price ₹5999. Pics bhejein?' },
+    // WhatsApp
+    { id:11, plat:'whatsapp', sender:'Anil Gupta', msg:'Kal meeting ka time kya hai?', tag:'query', aiReply:'Anil ji, kal subah 11 baje, board room. Aa rahe hain aap?' },
+    { id:12, plat:'whatsapp', sender:'Priya Patel', msg:'Order #1023 status batao', tag:'query', aiReply:'Priya ji, order shipped, tracking link: track.dtdc.in/1023' },
+    { id:13, plat:'whatsapp', sender:'Rajesh Khanna', msg:'15 phones bulk order dena hai', tag:'hot', aiReply:'Rajesh sir, bulk price ₹9500/piece. Delivery 7 days. Invoice ready karein?' },
+    { id:14, plat:'whatsapp', sender:'Sunita Yadav', msg:'EMI option hai kya?', tag:'query', aiReply:'Sunita ma’am, haan 0% EMI on orders above ₹5000. Bajaj Finserv.' },
+    { id:15, plat:'whatsapp', sender:'Amit Jain', msg:'Complaint: wrong item delivered', tag:'hot', aiReply:'Amit ji, sorry for inconvenience. Pickup kal ho jayega, replacement bhi. Regret.' },
+    { id:16, plat:'whatsapp', sender:'Neha Sharma', msg:'Gift wrapping kar sakte?', tag:'query', aiReply:'Neha ji, bilkul free gift wrap. Bas cart mein mention kar dein.' },
+    { id:17, plat:'whatsapp', sender:'Vikram Singh', msg:'Bill chahiye GST ke liye', tag:'query', aiReply:'Vikram ji, GST invoice WhatsApp pe bhej diya. Check karo.' },
+    { id:18, plat:'whatsapp', sender:'Ritu Kapoor', msg:'Exchange policy batao', tag:'query', aiReply:'Ritu ji, 7 din mein exchange free. Sirf tag intact hona chahiye.' },
+    { id:19, plat:'whatsapp', sender:'Mohan Reddy', msg:'Wholesale price list bhejo', tag:'hot', aiReply:'Mohan saab, abhi PDF bhejte hain. Minimum order 50 pieces.' },
+    { id:20, plat:'whatsapp', sender:'Sneha Iyer', msg:'Appointment book karna hai', tag:'query', aiReply:'Sneha ji, kal 3 baje slot khali hai. Confirm karein.' },
+    // Facebook
+    { id:21, plat:'facebook', sender:'Rahul Agarwal', msg:'Page promotion kaise karein?', tag:'query', aiReply:'Rahul ji, paid ads best rahenge. Budget batao, plan de dein.' },
+    { id:22, plat:'facebook', sender:'Kriti Das', msg:'Dance class ke liye enquiry', tag:'hot', aiReply:'Kriti, offline batch kal se start. Fees ₹2000/month. Aaogi?' },
+    { id:23, plat:'facebook', sender:'Sumit Bhai', msg:'Car accessories ka rate?', tag:'query', aiReply:'Sumit bhai, headlights ₹899, seat cover ₹1599. Free shipping.' },
+    { id:24, plat:'facebook', sender:'Ananya Mehra', msg:'Wedding shoot package?', tag:'hot', aiReply:'Ananya, pre-wedding ₹15k. Sample pics bhejein? Bahut romantic shots.' },
+    { id:25, plat:'facebook', sender:'Gaurav Saini', msg:'Old sofa bechna hai', tag:'query', aiReply:'Gaurav, pic bhejo, OLX pe daal dete hain. Service charge ₹300.' },
+    { id:26, plat:'facebook', sender:'Deepika Pillai', msg:'Mehndi artist chahiye Sunday', tag:'hot', aiReply:'Deepika, available hai. Rate ₹2500 full hand. Book kar dein?' },
+    { id:27, plat:'facebook', sender:'Arvind Kejriwal', msg:'Muffler kahan milega?', tag:'query', aiReply:'Arvind ji, muffler.com pe check karo. ₹399 mein best.' },
+    { id:28, plat:'facebook', sender:'Shweta Tiwari', msg:'Nanny service available?', tag:'query', aiReply:'Shweta ma’am, verified nanny ₹8000/month. Kal trial pe bhejein?' },
+    { id:29, plat:'facebook', sender:'Yogesh Patil', msg:'Plumber bhejo emergency', tag:'hot', aiReply:'Yogesh bhai, 1 ghante mein pahunch raha. Address bhejo.' },
+    { id:30, plat:'facebook', sender:'Komal Sharma', msg:'Receipt generate karo', tag:'query', aiReply:'Komal, receipt email pe bhej di. Spam folder check karo.' }
+  ];
+
+  let activeTab = 'instagram';
+
+  // ------------------ UI UPDATE FUNCTIONS ------------------
+  function updateUI() {
+    const filtered = messages.filter(m => m.plat === activeTab);
+    document.getElementById('inboxTitle').textContent = activeTab.charAt(0).toUpperCase()+activeTab.slice(1);
+    document.getElementById('connectLabel').textContent = activeTab.charAt(0).toUpperCase()+activeTab.slice(1);
+
+    // Stats
+    const hotCount = filtered.filter(m => m.tag === 'hot').length;
+    document.getElementById('statsGrid').innerHTML = `
+      <div class="stat-card glass">
+        <div class="icon-box" style="background: linear-gradient(135deg, #3b82f6, #06b6d4);">💬</div>
+        <div><div class="stat-number">${filtered.length}</div><div class="stat-label">Total ${activeTab} Msgs</div></div>
+      </div>
+      <div class="stat-card glass">
+        <div class="icon-box" style="background: linear-gradient(135deg, #f97316, #ef4444);">🔥</div>
+        <div><div class="stat-number">${hotCount}</div><div class="stat-label">Hot Leads</div></div>
+      </div>
+      <div class="stat-card glass">
+        <div class="icon-box" style="background: linear-gradient(135deg, #10b981, #14b8a6);">✨</div>
+        <div><div class="stat-number">${filtered.length}</div><div class="stat-label">AI Replies Ready</div></div>
+      </div>
+      <div class="stat-card glass">
+        <div class="icon-box" style="background: linear-gradient(135deg, #ec4899, #f43f5e);">💰</div>
+        <div><div class="stat-number">₹12.4k</div><div class="stat-label">Pipeline Value</div></div>
+      </div>
+    `;
+
+    // Inbox
+    const inboxHTML = filtered.map(m => `
+      <div class="message">
+        <div class="msg-header">
+          <span class="sender">${m.sender} <span class="badge ${m.tag==='hot'?'badge-hot':'badge-query'}">${m.tag==='hot'?'🔥 Hot Lead':'💬 Query'}</span></span>
+          <span style="font-size:0.75rem; color:#888;">just now</span>
+        </div>
+        <div>${m.msg}</div>
+        <div class="ai-reply">
+          <div><strong>💡 AI Reply:</strong> "${m.aiReply}"</div>
+          <div style="margin-top:8px;">
+            <button class="btn btn-primary" onclick="alert('Message sent (demo)')">Send</button>
+            <button class="btn btn-outline">Edit</button>
+            <button class="btn btn-outline" style="margin-left:auto;" onclick="simulateAIRegenerate(${m.id})" id="regen-${m.id}">🔄 Regenerate</button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+    document.getElementById('inboxContainer').innerHTML = inboxHTML;
+
+    // Hot Leads list
+    const hotLeads = filtered.filter(m => m.tag==='hot').slice(0,5);
+    const hotHTML = hotLeads.map(m => `<li style="margin-bottom:6px; display:flex; align-items:center; gap:6px;">🔴 <strong>${m.sender}</strong> - ${m.msg.slice(0,20)}...</li>`).join('');
+    document.getElementById('hotLeadsList').innerHTML = hotHTML || '<li style="color:gray;">No hot leads</li>';
+  }
+
+  // Simulate AI regeneration (shows loading then switches reply to a random funny one)
+  function simulateAIRegenerate(id) {
+    const btn = document.getElementById('regen-'+id);
+    btn.disabled = true;
+    btn.textContent = '⏳ Thinking...';
+    setTimeout(() => {
+      const fallbackReplies = [
+        "Haan bilkul, abhi check karta hoon. 😊",
+        "Aapka order process ho raha hai, thoda wait karo.",
+        "Sure! Main aapko details bhej deta hoon.",
+        "Thank you for reaching out! Aapka sawaal note kar liya.",
+        "Apologies for delay. Team update de rahi hai."
+      ];
+      const randomReply = fallbackReplies[Math.floor(Math.random() * fallbackReplies.length)];
+      // Find message and update aiReply
+      const msg = messages.find(m => m.id === id);
+      if (msg) msg.aiReply = randomReply;
+      btn.textContent = '🔄 Regenerate';
+      btn.disabled = false;
+      updateUI();
+    }, 1200);
+  }
+
+  // Tab switching
+  document.getElementById('tabContainer').addEventListener('click', (e) => {
+    if (e.target.classList.contains('tab')) {
+      document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+      e.target.classList.add('active');
+      activeTab = e.target.dataset.platform;
+      updateUI();
+    }
+  });
+
+  // Connect button (demo alert)
+  document.getElementById('connectBtn').addEventListener('click', () => {
+    alert(`This would open OAuth to connect your ${activeTab} account. (Demo)`);
+  });
+
+  // Initial load
+  updateUI();
+</script>
+</body>
+</html>
